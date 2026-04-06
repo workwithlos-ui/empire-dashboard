@@ -1,419 +1,771 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import {
-  Brain, ArrowRight, ArrowLeft, CheckCircle2, AlertTriangle, XCircle,
-  Zap, Target, BarChart3, Shield, Users, Cpu, Database, TrendingUp,
-  Award, Star, ChevronRight, RotateCcw
-} from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ChevronRight, ChevronLeft, Mail, User, Building2, CheckCircle2, Download, Calendar, AlertCircle, TrendingUp, Target, Zap } from 'lucide-react';
+import { RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
 
-const sections = [
-  { id: 'current', name: 'Current State', icon: BarChart3, color: '#6366f1' },
-  { id: 'tech', name: 'Tech & Data', icon: Database, color: '#3b82f6' },
-  { id: 'ops', name: 'Operations', icon: Cpu, color: '#f59e0b' },
-  { id: 'leadership', name: 'Leadership', icon: Users, color: '#10b981' },
+const ASSESSMENT_DATA = {
+  categories: [
+    {
+      id: 'data-infrastructure',
+      name: 'Data Infrastructure',
+      description: 'How well is your data organized and accessible?',
+      questions: [
+        {
+          id: 'q1',
+          question: 'How is your customer data currently stored?',
+          options: [
+            { label: 'Spreadsheets & files', value: 1 },
+            { label: 'Basic CRM (basic contact mgmt)', value: 2 },
+            { label: 'Advanced CRM (HubSpot, Salesforce)', value: 3 },
+            { label: 'Data warehouse with integrations', value: 4 },
+          ],
+        },
+        {
+          id: 'q2',
+          question: 'Can you access real-time business metrics on demand?',
+          options: [
+            { label: 'No, we rely on manual reports', value: 1 },
+            { label: 'Sometimes, but it takes effort', value: 2 },
+            { label: 'Usually, through dashboards', value: 3 },
+            { label: 'Always, with automated dashboards', value: 4 },
+          ],
+        },
+        {
+          id: 'q3',
+          question: 'How integrated are your business systems?',
+          options: [
+            { label: "Siloed - tools don't talk to each other", value: 1 },
+            { label: 'Some integration between key systems', value: 2 },
+            { label: 'Mostly integrated with some gaps', value: 3 },
+            { label: 'Fully connected data ecosystem', value: 4 },
+          ],
+        },
+        {
+          id: 'q4',
+          question: 'Do you have documented data processes?',
+          options: [
+            { label: 'No documentation', value: 1 },
+            { label: 'Some documented processes', value: 2 },
+            { label: 'Mostly documented, some gaps', value: 3 },
+            { label: 'Fully documented with SOPs', value: 4 },
+          ],
+        },
+        {
+          id: 'q5',
+          question: 'How clean and consistent is your data?',
+          options: [
+            { label: 'Lots of duplicates & inconsistencies', value: 1 },
+            { label: 'Some data quality issues', value: 2 },
+            { label: 'Mostly clean with occasional issues', value: 3 },
+            { label: 'Automated quality checks & cleanup', value: 4 },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'process-maturity',
+      name: 'Process Maturity',
+      description: 'How standardized and optimized are your operations?',
+      questions: [
+        {
+          id: 'q6',
+          question: 'How are customer inquiries handled?',
+          options: [
+            { label: 'Manually, one by one', value: 1 },
+            { label: 'Basic templates used sometimes', value: 2 },
+            { label: 'Some automation & routing', value: 3 },
+            { label: 'Fully automated intelligent triage', value: 4 },
+          ],
+        },
+        {
+          id: 'q7',
+          question: 'How do you manage your sales pipeline?',
+          options: [
+            { label: 'Mental notes & memory', value: 1 },
+            { label: 'Spreadsheet tracking', value: 2 },
+            { label: 'CRM with manual entry', value: 3 },
+            { label: 'CRM with sales automation', value: 4 },
+          ],
+        },
+        {
+          id: 'q8',
+          question: 'How are tasks assigned to your team?',
+          options: [
+            { label: 'Ad hoc, as things come up', value: 1 },
+            { label: 'Manager assigns daily', value: 2 },
+            { label: 'Scheduling tool for distribution', value: 3 },
+            { label: 'AI-optimized task dispatch', value: 4 },
+          ],
+        },
+        {
+          id: 'q9',
+          question: 'How do you handle follow-ups?',
+          options: [
+            { label: "Remember and hope we don't forget", value: 1 },
+            { label: 'Calendar reminders & checklists', value: 2 },
+            { label: 'Automated email sequences', value: 3 },
+            { label: 'AI-triggered based on customer behavior', value: 4 },
+          ],
+        },
+        {
+          id: 'q10',
+          question: 'How standardized are your operations?',
+          options: [
+            { label: 'Every job is different', value: 1 },
+            { label: 'Some standard operating procedures', value: 2 },
+            { label: 'Mostly standardized processes', value: 3 },
+            { label: 'Fully documented + continuously measured', value: 4 },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'team-culture',
+      name: 'Team & Culture',
+      description: 'Is your team ready to adopt and use AI?',
+      questions: [
+        {
+          id: 'q11',
+          question: 'How does your team feel about AI/automation?',
+          options: [
+            { label: 'Resistant - worried about job loss', value: 1 },
+            { label: "Skeptical - not convinced it helps", value: 2 },
+            { label: 'Open to it - willing to try', value: 3 },
+            { label: 'Actively requesting it', value: 4 },
+          ],
+        },
+        {
+          id: 'q12',
+          question: 'How tech-savvy is your team?',
+          options: [
+            { label: 'Struggles with basic tools', value: 1 },
+            { label: 'Can use standard apps', value: 2 },
+            { label: 'Comfortable learning new tech', value: 3 },
+            { label: 'Early adopters of new tools', value: 4 },
+          ],
+        },
+        {
+          id: 'q13',
+          question: 'Do you have someone to own AI initiatives?',
+          options: [
+            { label: 'No one available', value: 1 },
+            { label: 'Could assign someone', value: 2 },
+            { label: 'Have a dedicated tech lead', value: 3 },
+            { label: 'Dedicated ops/tech team', value: 4 },
+          ],
+        },
+        {
+          id: 'q14',
+          question: 'How does leadership view AI investment?',
+          options: [
+            { label: 'Unnecessary cost', value: 1 },
+            { label: 'Interested but cautious', value: 2 },
+            { label: 'Budget allocated for initiatives', value: 3 },
+            { label: 'Strategic priority for growth', value: 4 },
+          ],
+        },
+        {
+          id: 'q15',
+          question: 'How often does your team learn new tools?',
+          options: [
+            { label: 'Rarely - only when forced', value: 1 },
+            { label: 'When we need something specific', value: 2 },
+            { label: 'Quarterly training & updates', value: 3 },
+            { label: 'Continuous learning culture', value: 4 },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'revenue-ops',
+      name: 'Revenue Operations',
+      description: 'How optimized is your revenue engine?',
+      questions: [
+        {
+          id: 'q16',
+          question: 'How do you track revenue and profitability?',
+          options: [
+            { label: 'Bank statements & receipts', value: 1 },
+            { label: 'Spreadsheet tracking', value: 2 },
+            { label: 'Accounting software', value: 3 },
+            { label: 'Real-time dashboards with forecasting', value: 4 },
+          ],
+        },
+        {
+          id: 'q17',
+          question: 'How do you price your services?',
+          options: [
+            { label: 'Gut feel / market intuition', value: 1 },
+            { label: 'Match competitor pricing', value: 2 },
+            { label: 'Cost-plus methodology', value: 3 },
+            { label: 'Dynamic based on demand & margins', value: 4 },
+          ],
+        },
+        {
+          id: 'q18',
+          question: 'How do you identify upsell opportunities?',
+          options: [
+            { label: "We don't - didn't think about it", value: 1 },
+            { label: 'Occasionally remember to ask', value: 2 },
+            { label: 'Track manually in CRM', value: 3 },
+            { label: 'System flags them automatically', value: 4 },
+          ],
+        },
+        {
+          id: 'q19',
+          question: "What's your customer retention strategy?",
+          options: [
+            { label: 'Hope they come back', value: 1 },
+            { label: 'Occasional check-in calls', value: 2 },
+            { label: 'Scheduled quarterly follow-ups', value: 3 },
+            { label: 'Automated lifecycle marketing', value: 4 },
+          ],
+        },
+        {
+          id: 'q20',
+          question: 'How do you forecast revenue?',
+          options: [
+            { label: "We don't forecast", value: 1 },
+            { label: 'Rough estimates based on gut', value: 2 },
+            { label: 'Historical trending analysis', value: 3 },
+            { label: 'AI-powered predictive models', value: 4 },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'competitive-position',
+      name: 'Competitive Position',
+      description: 'Where do you stand vs. your competition?',
+      questions: [
+        {
+          id: 'q21',
+          question: 'How do your competitors use technology?',
+          options: [
+            { label: "Don't know their tech stack", value: 1 },
+            { label: "They're behind us technologically", value: 2 },
+            { label: 'About the same maturity level', value: 3 },
+            { label: "They're clearly ahead", value: 4 },
+          ],
+        },
+        {
+          id: 'q22',
+          question: 'How fast can you respond to inquiries?',
+          options: [
+            { label: 'Hours to days', value: 1 },
+            { label: 'Within a few hours', value: 2 },
+            { label: 'Under an hour typically', value: 3 },
+            { label: 'Under 5 minutes (automated)', value: 4 },
+          ],
+        },
+        {
+          id: 'q23',
+          question: 'How personalized is your customer experience?',
+          options: [
+            { label: 'One-size-fits-all approach', value: 1 },
+            { label: 'Basic segmentation applied', value: 2 },
+            { label: 'Track individual preferences', value: 3 },
+            { label: 'AI-personalized in real-time', value: 4 },
+          ],
+        },
+        {
+          id: 'q24',
+          question: 'What % of operations could be automated?',
+          options: [
+            { label: 'Less than 10%', value: 1 },
+            { label: '10-30% of workflows', value: 2 },
+            { label: '30-60% of daily tasks', value: 3 },
+            { label: 'Over 60% of operations', value: 4 },
+          ],
+        },
+        {
+          id: 'q25',
+          question: 'How do you measure customer satisfaction?',
+          options: [
+            { label: "We don't track it", value: 1 },
+            { label: 'Occasional surveys', value: 2 },
+            { label: 'Regular NPS tracking', value: 3 },
+            { label: 'Real-time sentiment analysis', value: 4 },
+          ],
+        },
+      ],
+    },
+  ],
+};
+
+const GRADE_THRESHOLDS = [
+  { min: 86, max: 100, label: 'AI-Native', color: 'from-green-500 to-emerald-600', description: "You're already operating at elite level. Fine-tuning and advanced AI orchestration is your next move." },
+  { min: 71, max: 85, label: 'Optimized', color: 'from-blue-500 to-cyan-600', description: "You're ahead of 90% of businesses. AI will give you an unfair competitive advantage." },
+  { min: 56, max: 70, label: 'Advancing', color: 'from-purple-500 to-pink-600', description: "Strong foundation. You're ready for multi-agent AI systems that run entire workflows autonomously." },
+  { min: 41, max: 55, label: 'Emerging', color: 'from-amber-500 to-orange-600', description: 'You have pieces in place. Strategic AI deployment can 3-5x your efficiency within 90 days.' },
+  { min: 25, max: 40, label: 'Foundation Phase', color: 'from-red-500 to-pink-600', description: "You're starting from scratch. AI will transform your business but you need infrastructure first." },
 ];
 
-const questions = [
-  // Current State (1-4)
-  { id: 1, section: 'current', text: 'How would you describe your current use of AI in business operations?', options: [
-    { text: 'No AI usage at all', score: 1 },
-    { text: 'Experimenting with basic tools (ChatGPT, etc.)', score: 2 },
-    { text: 'Using AI in 1-2 specific workflows', score: 3 },
-    { text: 'AI integrated across multiple departments', score: 4 },
-  ]},
-  { id: 2, section: 'current', text: 'What percentage of your repetitive tasks are currently automated?', options: [
-    { text: 'Less than 10%', score: 1 },
-    { text: '10-30%', score: 2 },
-    { text: '30-60%', score: 3 },
-    { text: 'Over 60%', score: 4 },
-  ]},
-  { id: 3, section: 'current', text: 'How do you currently handle customer inquiries and support?', options: [
-    { text: 'Entirely manual, phone and email only', score: 1 },
-    { text: 'Basic ticketing system with manual responses', score: 2 },
-    { text: 'Some automated responses with human escalation', score: 3 },
-    { text: 'AI-powered chatbots with intelligent routing', score: 4 },
-  ]},
-  { id: 4, section: 'current', text: 'How quickly can you generate a comprehensive business report?', options: [
-    { text: 'Days to weeks, mostly manual compilation', score: 1 },
-    { text: 'Several hours with spreadsheet tools', score: 2 },
-    { text: 'Under an hour with dashboard tools', score: 3 },
-    { text: 'Real-time automated reporting', score: 4 },
-  ]},
-  // Tech & Data (5-8)
-  { id: 5, section: 'tech', text: 'How would you rate your data infrastructure?', options: [
-    { text: 'Data scattered across spreadsheets and emails', score: 1 },
-    { text: 'Basic CRM/database but siloed systems', score: 2 },
-    { text: 'Centralized data with some integration', score: 3 },
-    { text: 'Unified data lake with real-time pipelines', score: 4 },
-  ]},
-  { id: 6, section: 'tech', text: 'What is the state of your API and integration capabilities?', options: [
-    { text: 'No APIs, everything is manual', score: 1 },
-    { text: 'A few basic integrations (Zapier, etc.)', score: 2 },
-    { text: 'Custom APIs connecting core systems', score: 3 },
-    { text: 'Full API ecosystem with event-driven architecture', score: 4 },
-  ]},
-  { id: 7, section: 'tech', text: 'How clean and structured is your business data?', options: [
-    { text: 'Messy, inconsistent, lots of duplicates', score: 1 },
-    { text: 'Somewhat organized but needs cleanup', score: 2 },
-    { text: 'Well-structured with regular maintenance', score: 3 },
-    { text: 'Production-grade data with governance policies', score: 4 },
-  ]},
-  { id: 8, section: 'tech', text: 'Do you have the technical talent to implement AI solutions?', options: [
-    { text: 'No technical team at all', score: 1 },
-    { text: 'Basic IT support only', score: 2 },
-    { text: 'Developers who could learn AI tools', score: 3 },
-    { text: 'Dedicated AI/ML engineers on staff', score: 4 },
-  ]},
-  // Operations (9-12)
-  { id: 9, section: 'ops', text: 'How standardized are your business processes?', options: [
-    { text: 'Ad hoc, different every time', score: 1 },
-    { text: 'Some documented SOPs but inconsistent', score: 2 },
-    { text: 'Well-documented and mostly followed', score: 3 },
-    { text: 'Fully standardized with continuous improvement', score: 4 },
-  ]},
-  { id: 10, section: 'ops', text: 'How do you handle lead follow-up and sales processes?', options: [
-    { text: 'Manual tracking, often leads fall through', score: 1 },
-    { text: 'Basic CRM with manual follow-up reminders', score: 2 },
-    { text: 'Automated sequences with some personalization', score: 3 },
-    { text: 'AI-driven scoring, routing, and personalized outreach', score: 4 },
-  ]},
-  { id: 11, section: 'ops', text: 'What is your average response time to new leads?', options: [
-    { text: 'Over 24 hours', score: 1 },
-    { text: '4-24 hours', score: 2 },
-    { text: '1-4 hours', score: 3 },
-    { text: 'Under 5 minutes (automated)', score: 4 },
-  ]},
-  { id: 12, section: 'ops', text: 'How do you measure and optimize operational efficiency?', options: [
-    { text: 'We do not track efficiency metrics', score: 1 },
-    { text: 'Basic revenue and expense tracking', score: 2 },
-    { text: 'KPI dashboards with regular reviews', score: 3 },
-    { text: 'Real-time analytics with AI-powered optimization', score: 4 },
-  ]},
-  // Leadership (13-15)
-  { id: 13, section: 'leadership', text: 'How committed is leadership to AI transformation?', options: [
-    { text: 'Skeptical or unaware of AI potential', score: 1 },
-    { text: 'Interested but no budget allocated', score: 2 },
-    { text: 'Active champion with dedicated budget', score: 3 },
-    { text: 'AI-first strategy with board-level support', score: 4 },
-  ]},
-  { id: 14, section: 'leadership', text: 'What is your AI implementation budget?', options: [
-    { text: 'No dedicated budget', score: 1 },
-    { text: 'Under $25K annually', score: 2 },
-    { text: '$25K - $100K annually', score: 3 },
-    { text: 'Over $100K annually', score: 4 },
-  ]},
-  { id: 15, section: 'leadership', text: 'How does your team view AI adoption?', options: [
-    { text: 'Resistant or fearful of change', score: 1 },
-    { text: 'Cautiously curious', score: 2 },
-    { text: 'Enthusiastic early adopters', score: 3 },
-    { text: 'Already using AI daily and pushing for more', score: 4 },
-  ]},
-];
+function getGrade(score) {
+  return GRADE_THRESHOLDS.find(t => score >= t.min && score <= t.max);
+}
 
-const tiers = [
-  { name: 'CRITICAL', range: [15, 25], color: '#ef4444', bg: 'bg-red-500/10 border-red-500/30', icon: XCircle, description: 'Your organization is at serious risk of falling behind. Immediate action is needed to begin your AI journey.' },
-  { name: 'BEHIND', range: [26, 38], color: '#f59e0b', bg: 'bg-amber-500/10 border-amber-500/30', icon: AlertTriangle, description: 'You have some foundations but significant gaps remain. A structured AI roadmap will accelerate your progress.' },
-  { name: 'READY', range: [39, 50], color: '#3b82f6', bg: 'bg-blue-500/10 border-blue-500/30', icon: CheckCircle2, description: 'Strong foundations are in place. Focus on scaling AI across departments and optimizing existing implementations.' },
-  { name: 'ADVANCED', range: [51, 60], color: '#10b981', bg: 'bg-emerald-500/10 border-emerald-500/30', icon: Award, description: 'You are an AI leader. Continue innovating and consider licensing your AI capabilities to others.' },
-];
+function AnimatedCounter({ target, duration = 2000 }) {
+  const [count, setCount] = useState(0);
 
-const industryBenchmarks = [
-  { industry: 'Private Equity', avg: 32, top: 52 },
-  { industry: 'SaaS / Technology', avg: 41, top: 56 },
-  { industry: 'Healthcare', avg: 28, top: 48 },
-  { industry: 'Real Estate', avg: 25, top: 44 },
-  { industry: 'E-Commerce', avg: 38, top: 54 },
-  { industry: 'Manufacturing', avg: 30, top: 46 },
-];
+  useEffect(() => {
+    const start = Date.now();
+    const timer = setInterval(() => {
+      const elapsed = Date.now() - start;
+      const progress = Math.min(elapsed / duration, 1);
+      setCount(Math.floor(target * progress));
+      if (progress === 1) clearInterval(timer);
+    }, 16);
+    return () => clearInterval(timer);
+  }, [target, duration]);
 
-export default function AIReadinessAssessment() {
-  const [screen, setScreen] = useState('welcome');
-  const [currentQ, setCurrentQ] = useState(0);
-  const [answers, setAnswers] = useState({});
+  return <span>{count}</span>;
+}
 
-  const handleAnswer = (questionId, score) => {
-    const newAnswers = { ...answers, [questionId]: score };
-    setAnswers(newAnswers);
-    if (currentQ < questions.length - 1) {
-      setTimeout(() => setCurrentQ(currentQ + 1), 300);
-    } else {
-      setTimeout(() => setScreen('results'), 500);
-    }
-  };
-
-  const totalScore = Object.values(answers).reduce((sum, s) => sum + s, 0);
-  const maxScore = 60;
-
-  const getSectionScore = (sectionId) => {
-    const sectionQs = questions.filter((q) => q.section === sectionId);
-    const sectionAnswers = sectionQs.map((q) => answers[q.id] || 0);
-    return sectionAnswers.reduce((sum, s) => sum + s, 0);
-  };
-
-  const getTier = () => {
-    return tiers.find((t) => totalScore >= t.range[0] && totalScore <= t.range[1]) || tiers[0];
-  };
-
-  const getRecommendations = () => {
-    const recs = [];
-    const sectionScores = sections.map((s) => ({ ...s, score: getSectionScore(s.id) }));
-    const weakest = sectionScores.sort((a, b) => a.score - b.score);
-
-    const recMap = {
-      current: 'Start with quick-win AI tools like chatbots and automated email responses to build momentum and demonstrate ROI within 30 days.',
-      tech: 'Invest in data infrastructure consolidation. Clean, centralized data is the foundation for every successful AI implementation.',
-      ops: 'Map and standardize your top 10 business processes. Automation works best on consistent, documented workflows.',
-      leadership: 'Schedule an AI strategy workshop for leadership. Alignment at the top is critical for successful transformation.',
-    };
-
-    for (let i = 0; i < 3 && i < weakest.length; i++) {
-      recs.push({ section: weakest[i].name, text: recMap[weakest[i].id], color: weakest[i].color });
-    }
-    return recs;
-  };
-
-  const restart = () => {
-    setScreen('welcome');
-    setCurrentQ(0);
-    setAnswers({});
-  };
-
-  // Welcome Screen
-  if (screen === 'welcome') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-4 md:p-6 flex items-center justify-center">
-        <div className="max-w-2xl w-full text-center space-y-8">
-          <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto shadow-lg shadow-indigo-500/20">
-            <Brain className="w-10 h-10 text-white" />
-          </div>
-          <h1 className="text-4xl font-bold text-white">AI Readiness Assessment</h1>
-          <p className="text-lg text-slate-400 max-w-lg mx-auto">
-            Discover where your organization stands on the AI maturity spectrum. 15 questions across 4 critical dimensions will reveal your readiness tier and provide actionable recommendations.
-          </p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {sections.map((s) => {
-              const Icon = s.icon;
-              return (
-                <div key={s.id} className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 backdrop-blur-sm">
-                  <Icon className="w-6 h-6 mx-auto mb-2" style={{ color: s.color }} />
-                  <div className="text-sm font-medium text-white">{s.name}</div>
-                  <div className="text-xs text-slate-500 mt-1">{questions.filter((q) => q.section === s.id).length} questions</div>
-                </div>
-              );
-            })}
-          </div>
-          <button
-            onClick={() => setScreen('assessment')}
-            className="px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl hover:from-indigo-500 hover:to-purple-500 transition-all shadow-lg shadow-indigo-500/20 flex items-center gap-2 mx-auto"
-          >
-            Start Assessment <ArrowRight className="w-5 h-5" />
-          </button>
-          <p className="text-xs text-slate-600">Takes approximately 3-5 minutes to complete</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Assessment Screen
-  if (screen === 'assessment') {
-    const q = questions[currentQ];
-    const currentSection = sections.find((s) => s.id === q.section);
-    const progress = ((currentQ + 1) / questions.length) * 100;
-
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-4 md:p-6">
-        <div className="max-w-3xl mx-auto space-y-6">
-          {/* Progress */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-slate-400">Question {currentQ + 1} of {questions.length}</span>
-              <span className="text-slate-400" style={{ color: currentSection.color }}>{currentSection.name}</span>
-            </div>
-            <div className="w-full bg-slate-800 rounded-full h-2">
-              <div className="h-2 rounded-full transition-all duration-500" style={{ width: `${progress}%`, backgroundColor: currentSection.color }} />
-            </div>
-            <div className="flex gap-1">
-              {sections.map((s) => {
-                const sectionQs = questions.filter((sq) => sq.section === s.id);
-                const firstIdx = questions.indexOf(sectionQs[0]);
-                const lastIdx = questions.indexOf(sectionQs[sectionQs.length - 1]);
-                const isActive = currentQ >= firstIdx && currentQ <= lastIdx;
-                const isComplete = currentQ > lastIdx;
-                return (
-                  <div key={s.id} className={`flex-1 h-1 rounded-full transition-all ${isComplete ? 'opacity-100' : isActive ? 'opacity-60' : 'opacity-20'}`}
-                    style={{ backgroundColor: s.color }} />
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Question */}
-          <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-8 backdrop-blur-sm">
-            <div className="flex items-center gap-2 mb-6">
-              {(() => { const Icon = currentSection.icon; return <Icon className="w-5 h-5" style={{ color: currentSection.color }} />; })()}
-              <span className="text-sm font-medium" style={{ color: currentSection.color }}>{currentSection.name}</span>
-            </div>
-            <h2 className="text-xl font-semibold text-white mb-8">{q.text}</h2>
-            <div className="space-y-3">
-              {q.options.map((option, i) => (
-                <button
-                  key={i}
-                  onClick={() => handleAnswer(q.id, option.score)}
-                  className={`w-full text-left p-4 rounded-xl border transition-all ${
-                    answers[q.id] === option.score
-                      ? 'border-indigo-500/50 bg-indigo-500/10 text-white'
-                      : 'border-slate-700/50 bg-slate-900/30 text-slate-300 hover:border-slate-600 hover:bg-slate-800/50'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                      answers[q.id] === option.score ? 'bg-indigo-500 text-white' : 'bg-slate-700 text-slate-400'
-                    }`}>
-                      {String.fromCharCode(65 + i)}
-                    </div>
-                    <span className="text-sm">{option.text}</span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Navigation */}
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => currentQ > 0 && setCurrentQ(currentQ - 1)}
-              disabled={currentQ === 0}
-              className="flex items-center gap-2 px-4 py-2 text-sm text-slate-400 hover:text-white disabled:opacity-30 transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4" /> Previous
-            </button>
-            {answers[q.id] && currentQ < questions.length - 1 && (
-              <button
-                onClick={() => setCurrentQ(currentQ + 1)}
-                className="flex items-center gap-2 px-4 py-2 text-sm text-indigo-400 hover:text-indigo-300 transition-colors"
-              >
-                Next <ArrowRight className="w-4 h-4" />
-              </button>
-            )}
-            {answers[q.id] && currentQ === questions.length - 1 && (
-              <button
-                onClick={() => setScreen('results')}
-                className="flex items-center gap-2 px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 transition-colors text-sm font-medium"
-              >
-                View Results <ArrowRight className="w-4 h-4" />
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Results Screen
-  const tier = getTier();
-  const TierIcon = tier.icon;
-  const recommendations = getRecommendations();
-
+function LandingScreen({ onStart }) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-4 md:p-6 space-y-6">
-      <div className="max-w-4xl mx-auto space-y-6">
-        {/* Tier Classification */}
-        <div className={`${tier.bg} border rounded-xl p-8 backdrop-blur-sm text-center`}>
-          <TierIcon className="w-16 h-16 mx-auto mb-4" style={{ color: tier.color }} />
-          <div className="text-sm text-slate-400 mb-2">Your AI Readiness Tier</div>
-          <h1 className="text-4xl font-bold mb-2" style={{ color: tier.color }}>{tier.name}</h1>
-          <div className="text-5xl font-bold text-white my-4">{totalScore}<span className="text-lg text-slate-500">/{maxScore}</span></div>
-          <p className="text-slate-400 max-w-lg mx-auto">{tier.description}</p>
+    <div className="min-h-screen bg-gradient-to-br from-[#0a0a0f] to-[#1a1a2e] flex flex-col items-center justify-center p-6">
+      <div className="max-w-2xl w-full text-center space-y-8 animate-fade-in">
+        <div className="space-y-4">
+          <h1 className="text-5xl md:text-6xl font-bold text-white">How AI-Ready Is Your Business?</h1>
+          <p className="text-xl text-white/60">25-question assessment. Get your personalized readiness score + action plan.</p>
         </div>
 
-        {/* Section Scores */}
-        <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 backdrop-blur-sm">
-          <h2 className="text-lg font-semibold text-white mb-4">Section Breakdown</h2>
-          <div className="space-y-4">
-            {sections.map((s) => {
-              const score = getSectionScore(s.id);
-              const maxSectionScore = questions.filter((q) => q.section === s.id).length * 4;
-              const pct = (score / maxSectionScore) * 100;
-              const Icon = s.icon;
-              return (
-                <div key={s.id}>
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <Icon className="w-4 h-4" style={{ color: s.color }} />
-                      <span className="text-sm font-medium text-white">{s.name}</span>
-                    </div>
-                    <span className="text-sm font-bold text-white">{score}/{maxSectionScore}</span>
-                  </div>
-                  <div className="w-full bg-slate-700/50 rounded-full h-3">
-                    <div className="h-3 rounded-full transition-all duration-1000" style={{ width: `${pct}%`, backgroundColor: s.color }} />
-                  </div>
-                </div>
-              );
-            })}
+        <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-12 space-y-6 hover:bg-white/10 transition-all duration-300">
+          <div className="flex items-center justify-center space-x-3 text-white/60 text-sm">
+            <span>Takes ~4 minutes</span>
+            <span>.</span>
+            <span>Used by 500+ businesses</span>
           </div>
+
+          <button
+            onClick={onStart}
+            className="w-full bg-amber-500 hover:bg-amber-400 text-black font-semibold py-4 rounded-xl transition-all duration-300 text-lg flex items-center justify-center space-x-2"
+          >
+            <span>Start Assessment</span>
+            <ChevronRight className="w-5 h-5" />
+          </button>
         </div>
 
-        {/* Industry Benchmarks */}
-        <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 backdrop-blur-sm">
-          <h2 className="text-lg font-semibold text-white mb-4">Industry Benchmark Comparison</h2>
-          <div className="space-y-3">
-            {industryBenchmarks.map((bench) => (
-              <div key={bench.industry} className="flex items-center gap-3">
-                <div className="w-32 text-sm text-slate-300">{bench.industry}</div>
-                <div className="flex-1 relative bg-slate-700/50 rounded-full h-4">
-                  <div className="absolute h-4 bg-slate-600/60 rounded-full" style={{ width: `${(bench.avg / 60) * 100}%` }} />
-                  <div className="absolute h-4 bg-blue-500/30 rounded-full" style={{ width: `${(bench.top / 60) * 100}%` }} />
-                  <div className="absolute h-6 w-0.5 -top-1 rounded-full" style={{ left: `${(totalScore / 60) * 100}%`, backgroundColor: tier.color }} />
-                </div>
-                <div className="w-20 text-xs text-slate-500 text-right">
-                  Avg: {bench.avg} | Top: {bench.top}
-                </div>
-              </div>
-            ))}
+        <div className="grid grid-cols-3 gap-4 md:gap-6 text-center">
+          <div className="space-y-2">
+            <div className="text-2xl font-bold text-amber-500">500+</div>
+            <div className="text-white/60 text-sm">Businesses Assessed</div>
           </div>
-          <div className="mt-3 flex items-center gap-4 text-xs text-slate-500">
-            <span className="flex items-center gap-1"><span className="w-3 h-1 bg-slate-600 rounded" /> Industry Avg</span>
-            <span className="flex items-center gap-1"><span className="w-3 h-1 bg-blue-500/50 rounded" /> Top Performers</span>
-            <span className="flex items-center gap-1"><span className="w-0.5 h-3 rounded" style={{ backgroundColor: tier.color }} /> Your Score</span>
+          <div className="space-y-2">
+            <div className="text-2xl font-bold text-amber-500">3-5x</div>
+            <div className="text-white/60 text-sm">Avg. Efficiency Gain</div>
           </div>
-        </div>
-
-        {/* Top 3 Recommendations */}
-        <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 backdrop-blur-sm">
-          <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-            <Star className="w-5 h-5 text-amber-400" />
-            Top 3 Recommendations
-          </h2>
-          <div className="space-y-4">
-            {recommendations.map((rec, i) => (
-              <div key={i} className="bg-slate-900/50 border border-slate-700/30 rounded-lg p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs font-bold">{i + 1}</span>
-                  <span className="text-sm font-medium" style={{ color: rec.color }}>{rec.section}</span>
-                </div>
-                <p className="text-sm text-slate-300">{rec.text}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* CTA */}
-        <div className="bg-gradient-to-r from-indigo-600/20 to-purple-600/20 border border-indigo-500/30 rounded-xl p-8 text-center backdrop-blur-sm">
-          <h2 className="text-2xl font-bold text-white mb-2">Ready to Accelerate Your AI Journey?</h2>
-          <p className="text-slate-400 mb-6">Get a personalized AI implementation roadmap tailored to your organization.</p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <a href="https://aisimple.com" target="_blank" rel="noopener noreferrer"
-              className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl hover:from-indigo-500 hover:to-purple-500 transition-all shadow-lg shadow-indigo-500/20 flex items-center gap-2">
-              Book Strategy Call <ChevronRight className="w-4 h-4" />
-            </a>
-            <button onClick={restart}
-              className="px-6 py-3 bg-slate-800 text-slate-300 font-medium rounded-xl border border-slate-700 hover:bg-slate-700 transition-all flex items-center gap-2">
-              <RotateCcw className="w-4 h-4" /> Retake Assessment
-            </button>
+          <div className="space-y-2">
+            <div className="text-2xl font-bold text-amber-500">90 days</div>
+            <div className="text-white/60 text-sm">To Implementation</div>
           </div>
         </div>
       </div>
     </div>
+  );
+}
+
+function QuestionScreen({ currentCategoryIndex, currentQuestionIndex, question, answers, onAnswer, onNext, onBack, totalQuestions }) {
+  const progress = ((currentCategoryIndex * 5 + currentQuestionIndex) / totalQuestions) * 100;
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-[#0a0a0f] to-[#1a1a2e] flex flex-col p-6">
+      <div className="max-w-2xl w-full mx-auto flex flex-col h-full">
+        <div className="space-y-3 mb-8">
+          <div className="flex justify-between items-center text-white/60 text-sm">
+            <span>Category {currentCategoryIndex + 1} of 5</span>
+            <span>{currentQuestionIndex + 1} of 5</span>
+          </div>
+          <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden border border-white/10">
+            <div
+              className="bg-gradient-to-r from-amber-500 to-amber-400 h-full transition-all duration-500"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </div>
+
+        <div className="flex-grow flex flex-col justify-center space-y-6 mb-8">
+          <h2 className="text-3xl md:text-4xl font-bold text-white">{question.question}</h2>
+
+          <div className="space-y-3">
+            {question.options.map((option, idx) => (
+              <button
+                key={idx}
+                onClick={() => {
+                  onAnswer(option.value);
+                  setTimeout(onNext, 300);
+                }}
+                className="w-full backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl p-4 text-left hover:bg-white/10 hover:border-amber-500/30 transition-all duration-300 group"
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="w-5 h-5 rounded-full border-2 border-white/30 group-hover:border-amber-500 transition-colors" />
+                  <span className="text-white group-hover:text-amber-400 transition-colors font-medium">{option.label}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex justify-between items-center mt-8">
+          <button
+            onClick={onBack}
+            disabled={currentCategoryIndex === 0 && currentQuestionIndex === 0}
+            className="flex items-center space-x-2 text-white/60 hover:text-white disabled:opacity-30 transition-colors"
+          >
+            <ChevronLeft className="w-5 h-5" />
+            <span>Back</span>
+          </button>
+          <div className="text-white/40 text-sm">
+            {((currentCategoryIndex * 5 + currentQuestionIndex + 1) / totalQuestions * 100).toFixed(0)}% complete
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EmailCaptureScreen({ score, onCapture, onSkip }) {
+  const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
+  const [company, setCompany] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setTimeout(() => {
+      onCapture({ email, name, company });
+      setLoading(false);
+    }, 500);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-[#0a0a0f] to-[#1a1a2e] flex flex-col items-center justify-center p-6 animate-fade-in">
+      <div className="max-w-2xl w-full space-y-8">
+        <div className="text-center space-y-2">
+          <h2 className="text-4xl font-bold text-white">Your results are ready!</h2>
+          <p className="text-white/60">Just one more step to unlock your personalized action plan</p>
+        </div>
+
+        <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-8 space-y-6">
+          <div className="flex items-center justify-center mb-8">
+            <div className="w-32 h-32 rounded-full bg-gradient-to-br from-amber-500/20 to-amber-600/20 border-2 border-amber-500/50 flex flex-col items-center justify-center space-y-1">
+              <div className="text-4xl font-bold text-amber-400 filter blur-sm">{score}</div>
+              <div className="text-xs text-amber-300/70 filter blur-sm uppercase tracking-wide">Teaser</div>
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-white/60 text-sm mb-2">Your Name</label>
+              <input type="text" value={name} onChange={(e) => setName(e.target.value)} required placeholder="Full name" className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-amber-500/50 transition-colors" />
+            </div>
+            <div>
+              <label className="block text-white/60 text-sm mb-2">Email Address</label>
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="you@company.com" className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-amber-500/50 transition-colors" />
+            </div>
+            <div>
+              <label className="block text-white/60 text-sm mb-2">Company</label>
+              <input type="text" value={company} onChange={(e) => setCompany(e.target.value)} required placeholder="Company name" className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-amber-500/50 transition-colors" />
+            </div>
+
+            <button type="submit" disabled={loading} className="w-full bg-amber-500 hover:bg-amber-400 disabled:bg-amber-500/50 text-black font-semibold py-3 rounded-lg transition-all duration-300 flex items-center justify-center space-x-2">
+              <span>{loading ? 'Processing...' : 'Get My Results'}</span>
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </form>
+        </div>
+
+        <button onClick={onSkip} className="w-full text-white/60 hover:text-white py-2 text-sm transition-colors">
+          Skip for now
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ResultsScreen({ score, categoryScores, capturedData, onDownload }) {
+  const grade = getGrade(score);
+  const categoryNames = ['Data Infrastructure', 'Process Maturity', 'Team & Culture', 'Revenue Operations', 'Competitive Position'];
+
+  const lowestCategories = categoryScores
+    .map((score, idx) => ({ name: categoryNames[idx], score, idx }))
+    .sort((a, b) => a.score - b.score)
+    .slice(0, 3);
+
+  const radarData = categoryNames.map((name, idx) => ({
+    name: name.split(' ')[0],
+    score: categoryScores[idx],
+    fullMark: 20,
+  }));
+
+  const recommendationsByCategory = {
+    0: {
+      title: 'Data Infrastructure Gap',
+      items: [
+        'Implement a unified CRM to centralize customer data',
+        'Set up automated data quality checks and deduplication',
+        'Create API integrations between your key business tools',
+      ],
+    },
+    1: {
+      title: 'Process Maturity Gap',
+      items: [
+        'Document your core workflows and standard operating procedures',
+        'Implement workflow automation for repetitive tasks',
+        'Set up automated customer inquiry routing and triage',
+      ],
+    },
+    2: {
+      title: 'Team & Culture Gap',
+      items: [
+        'Start with AI training and change management workshops',
+        'Designate an AI champion or operations lead',
+        'Create a pilot project to demonstrate quick wins',
+      ],
+    },
+    3: {
+      title: 'Revenue Operations Gap',
+      items: [
+        'Implement real-time revenue dashboards and forecasting',
+        'Set up automated upsell and cross-sell identification',
+        'Create predictive models for customer lifetime value',
+      ],
+    },
+    4: {
+      title: 'Competitive Position Gap',
+      items: [
+        'Benchmark your tech stack against competitors',
+        'Implement automation to improve response times',
+        'Deploy AI-powered personalization for customer experience',
+      ],
+    },
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-[#0a0a0f] to-[#1a1a2e] p-6 animate-fade-in">
+      <div className="max-w-5xl mx-auto space-y-12">
+        <div className="text-center space-y-3">
+          <h1 className="text-4xl md:text-5xl font-bold text-white">Your AI Readiness Score</h1>
+          <p className="text-white/60">Comprehensive assessment for {capturedData?.company || 'Your Company'}</p>
+        </div>
+
+        <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-12 flex flex-col md:flex-row items-center justify-between gap-8">
+          <div className="flex-1 flex flex-col items-center">
+            <div className="relative w-48 h-48 flex items-center justify-center">
+              <div className={`absolute inset-0 rounded-full bg-gradient-to-br ${grade.color} opacity-20`} />
+              <div className="absolute inset-2 rounded-full bg-gradient-to-br from-[#0a0a0f] to-[#1a1a2e] border border-white/10" />
+              <div className="relative flex flex-col items-center justify-center">
+                <div className="text-6xl font-bold text-amber-400">
+                  <AnimatedCounter target={score} />
+                </div>
+                <div className="text-xl text-white/60 mt-2">/ 100</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex-1 space-y-4">
+            <div className="space-y-1">
+              <div className={`text-4xl font-bold bg-gradient-to-r ${grade.color} bg-clip-text text-transparent`}>
+                {grade.label}
+              </div>
+              <p className="text-white/60 text-sm">{grade.description}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-8">
+          <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-8 space-y-6">
+            <h3 className="text-xl font-bold text-white">Category Breakdown</h3>
+            {categoryNames.map((name, idx) => (
+              <div key={idx} className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-white/80 font-medium text-sm">{name}</span>
+                  <span className="font-mono text-amber-400 font-semibold">{categoryScores[idx]}/20</span>
+                </div>
+                <div className="w-full bg-white/5 h-3 rounded-full overflow-hidden border border-white/10">
+                  <div
+                    className="bg-gradient-to-r from-amber-500 to-amber-400 h-full transition-all duration-1000"
+                    style={{ width: `${(categoryScores[idx] / 20) * 100}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-8">
+            <h3 className="text-xl font-bold text-white mb-6">Readiness Profile</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <RadarChart data={radarData}>
+                <PolarGrid stroke="rgba(255,255,255,0.1)" />
+                <PolarAngleAxis dataKey="name" stroke="rgba(255,255,255,0.6)" tick={{ fontSize: 12 }} />
+                <PolarRadiusAxis angle={90} domain={[0, 20]} stroke="rgba(255,255,255,0.3)" />
+                <Radar name="Score" dataKey="score" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.3} />
+              </RadarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-8 space-y-6">
+          <h3 className="text-xl font-bold text-white">Your AI Readiness Action Plan</h3>
+          <div className="grid md:grid-cols-3 gap-6">
+            {lowestCategories.map((cat, idx) => {
+              const recommendation = recommendationsByCategory[cat.idx];
+              return (
+                <div key={idx} className="bg-white/5 border border-white/10 rounded-lg p-6 space-y-4 hover:bg-white/10 transition-all duration-300">
+                  <div className="flex items-start space-x-3">
+                    <div className="text-2xl">{idx === 0 ? '🎯' : idx === 1 ? '⚡' : '🚀'}</div>
+                    <div className="flex-1">
+                      <h4 className="font-bold text-white text-sm mb-3">{recommendation.title}</h4>
+                      <ul className="space-y-2">
+                        {recommendation.items.map((item, i) => (
+                          <li key={i} className="text-white/60 text-xs flex items-start space-x-2">
+                            <span className="mt-1 block w-1 h-1 bg-amber-500 rounded-full flex-shrink-0" />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-4">
+          <a
+            href="https://calendly.com/elios-ai"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all duration-300 flex items-center justify-center space-x-3"
+          >
+            <Calendar className="w-5 h-5 text-amber-500" />
+            <div className="text-left">
+              <div className="font-semibold text-white">Book a Free Strategy Call</div>
+              <div className="text-xs text-white/60">30-min personalized consultation</div>
+            </div>
+          </a>
+
+          <button
+            onClick={onDownload}
+            className="bg-amber-500 hover:bg-amber-400 text-black font-semibold py-4 rounded-xl transition-all duration-300 flex items-center justify-center space-x-3"
+          >
+            <Download className="w-5 h-5" />
+            <span>Download Full Report</span>
+          </button>
+        </div>
+
+        <div className="text-center text-white/40 text-sm space-y-2">
+          <p>This assessment was created by Elios AI Consulting & 33v Studio</p>
+          <p>Your data was stored securely and will be used to contact you with relevant recommendations.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function AIReadinessAssessment() {
+  const [screen, setScreen] = useState('landing');
+  const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [answers, setAnswers] = useState({});
+  const [capturedData, setCapturedData] = useState(null);
+
+  const flatQuestions = ASSESSMENT_DATA.categories.flatMap((cat) =>
+    cat.questions.map((q) => ({ ...q, categoryIndex: ASSESSMENT_DATA.categories.indexOf(cat) }))
+  );
+
+  const currentQuestion = flatQuestions[currentCategoryIndex * 5 + currentQuestionIndex];
+
+  const handleStartAssessment = () => {
+    setScreen('assessment');
+  };
+
+  const handleAnswer = (value) => {
+    const questionId = currentQuestion.id;
+    setAnswers({ ...answers, [questionId]: value });
+  };
+
+  const handleNextQuestion = () => {
+    if (currentQuestionIndex < 4) {
+      setCurrentQuestionIndex(currentQuestionIndex + 1);
+    } else if (currentCategoryIndex < 4) {
+      setCurrentCategoryIndex(currentCategoryIndex + 1);
+      setCurrentQuestionIndex(0);
+    } else {
+      setScreen('email');
+    }
+  };
+
+  const handleBackQuestion = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(currentQuestionIndex - 1);
+    } else if (currentCategoryIndex > 0) {
+      setCurrentCategoryIndex(currentCategoryIndex - 1);
+      setCurrentQuestionIndex(4);
+    }
+  };
+
+  const handleEmailCapture = (data) => {
+    setCapturedData(data);
+    setScreen('results');
+  };
+
+  const handleSkipEmail = () => {
+    setCapturedData({ name: 'Friend', company: 'Your Company', email: 'contact@yourcompany.com' });
+    setScreen('results');
+  };
+
+  const handleDownloadReport = () => {
+    window.print();
+  };
+
+  const categoryScores = ASSESSMENT_DATA.categories.map((cat) => {
+    return cat.questions.reduce((sum, q) => {
+      return sum + (answers[q.id] || 0);
+    }, 0);
+  });
+
+  const totalScore = categoryScores.reduce((a, b) => a + b, 0);
+
+  if (screen === 'landing') {
+    return <LandingScreen onStart={handleStartAssessment} />;
+  }
+
+  if (screen === 'assessment') {
+    return (
+      <QuestionScreen
+        currentCategoryIndex={currentCategoryIndex}
+        currentQuestionIndex={currentQuestionIndex}
+        question={currentQuestion}
+        answers={answers}
+        onAnswer={handleAnswer}
+        onNext={handleNextQuestion}
+        onBack={handleBackQuestion}
+        totalQuestions={25}
+      />
+    );
+  }
+
+  if (screen === 'email') {
+    return (
+      <EmailCaptureScreen
+        score={totalScore}
+        onCapture={handleEmailCapture}
+        onSkip={handleSkipEmail}
+      />
+    );
+  }
+
+  return (
+    <ResultsScreen
+      score={totalScore}
+      categoryScores={categoryScores}
+      capturedData={capturedData}
+      onDownload={handleDownloadReport}
+    />
   );
 }
