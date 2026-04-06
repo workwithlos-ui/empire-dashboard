@@ -2,53 +2,147 @@
 
 import { useState } from 'react';
 import {
-  Wrench, Search, Filter, DollarSign, Zap, Clock, CheckCircle2, AlertCircle,
-  ArrowRight, Tag, Layers, TrendingUp, Box, GitBranch, Star
+  Wrench, Search, Filter, DollarSign, Zap, Clock, CheckCircle2,
+  ArrowRight, Tag, Layers, TrendingUp, Box, GitBranch, ExternalLink,
+  Globe, AlertCircle, Radio
 } from 'lucide-react';
 
-const categories = ['All', 'Sales', 'Marketing', 'Operations', 'Analytics', 'AI/ML', 'Finance', 'HR'];
-const statuses = ['All', 'Deployed', 'In Progress', 'Planned'];
+const categories = ['All', 'Sales', 'Marketing', 'Operations', 'Analytics', 'AI/ML', 'Platform'];
+const statuses = ['All', 'Live', 'Deploying', 'Planned'];
 
 const tools = [
-  { id: 1, name: 'Revenue Leak Calculator', category: 'Sales', status: 'Deployed', priority: 'High', revenue: 45000, deps: ['CRM Integration'], description: 'Identifies and quantifies revenue leakage across operations' },
-  { id: 2, name: 'AI Readiness Assessment', category: 'AI/ML', status: 'Deployed', priority: 'High', revenue: 38000, deps: ['Scoring Engine'], description: 'Evaluates organizational AI readiness with tier classification' },
-  { id: 3, name: 'QUORUM Event Manager', category: 'Sales', status: 'Deployed', priority: 'Critical', revenue: 285000, deps: ['Payment Gateway', 'Email Engine'], description: 'Full event management and ticket sales platform' },
-  { id: 4, name: 'Content Calendar Engine', category: 'Marketing', status: 'Deployed', priority: 'High', revenue: 22000, deps: ['Social API'], description: 'Multi-platform content scheduling and tracking' },
-  { id: 5, name: 'Deal Pipeline Tracker', category: 'Sales', status: 'Deployed', priority: 'High', revenue: 55000, deps: ['CRM Integration'], description: 'Visual deal pipeline with probability scoring' },
-  { id: 6, name: 'Brand Revenue Analyzer', category: 'Analytics', status: 'Deployed', priority: 'Medium', revenue: 18000, deps: ['Data Warehouse'], description: 'Cross-brand revenue analysis and forecasting' },
-  { id: 7, name: 'Email Sequence Builder', category: 'Marketing', status: 'Deployed', priority: 'High', revenue: 32000, deps: ['Email Engine'], description: 'Automated email sequence creation and optimization' },
-  { id: 8, name: 'Client Onboarding Flow', category: 'Operations', status: 'Deployed', priority: 'High', revenue: 28000, deps: ['CRM Integration', 'Doc Generator'], description: 'Streamlined client onboarding automation' },
-  { id: 9, name: 'Proposal Generator', category: 'Sales', status: 'Deployed', priority: 'High', revenue: 42000, deps: ['Doc Generator', 'Pricing Engine'], description: 'AI-powered proposal creation from templates' },
-  { id: 10, name: 'Invoice Automation', category: 'Finance', status: 'Deployed', priority: 'Medium', revenue: 15000, deps: ['Payment Gateway'], description: 'Automated invoicing and payment tracking' },
-  { id: 11, name: 'Social Listening Dashboard', category: 'Marketing', status: 'Deployed', priority: 'Medium', revenue: 12000, deps: ['Social API'], description: 'Real-time brand mention and sentiment tracking' },
-  { id: 12, name: 'KPI Dashboard Builder', category: 'Analytics', status: 'Deployed', priority: 'High', revenue: 25000, deps: ['Data Warehouse'], description: 'Custom KPI dashboard creation tool' },
-  { id: 13, name: 'Meeting Scheduler', category: 'Operations', status: 'Deployed', priority: 'Medium', revenue: 8000, deps: ['Calendar API'], description: 'AI-powered meeting scheduling and prep' },
-  { id: 14, name: 'Lead Scoring Engine', category: 'AI/ML', status: 'Deployed', priority: 'High', revenue: 48000, deps: ['CRM Integration', 'ML Pipeline'], description: 'Machine learning lead qualification scoring' },
-  { id: 15, name: 'Chatbot Framework', category: 'AI/ML', status: 'Deployed', priority: 'High', revenue: 35000, deps: ['LLM API'], description: 'Custom AI chatbot builder for client sites' },
-  { id: 16, name: 'Document Analyzer', category: 'AI/ML', status: 'Deployed', priority: 'Medium', revenue: 20000, deps: ['LLM API', 'OCR Engine'], description: 'AI document parsing and data extraction' },
-  { id: 17, name: 'Competitive Intel Tool', category: 'Analytics', status: 'Deployed', priority: 'Medium', revenue: 16000, deps: ['Web Scraper'], description: 'Automated competitive landscape analysis' },
-  { id: 18, name: 'ROI Calculator Suite', category: 'Sales', status: 'Deployed', priority: 'High', revenue: 30000, deps: ['Pricing Engine'], description: 'Multi-scenario ROI calculation tools' },
-  { id: 19, name: 'Team Performance Tracker', category: 'HR', status: 'Deployed', priority: 'Medium', revenue: 14000, deps: ['HR System'], description: 'Employee performance metrics and reviews' },
-  { id: 20, name: 'Workflow Automator', category: 'Operations', status: 'In Progress', priority: 'High', revenue: 40000, deps: ['Integration Hub'], description: 'No-code workflow automation builder' },
-  { id: 21, name: 'Predictive Analytics Engine', category: 'AI/ML', status: 'In Progress', priority: 'High', revenue: 55000, deps: ['ML Pipeline', 'Data Warehouse'], description: 'Revenue and churn prediction models' },
-  { id: 22, name: 'Video Content Repurposer', category: 'Marketing', status: 'In Progress', priority: 'Medium', revenue: 18000, deps: ['Media API', 'LLM API'], description: 'Auto-repurpose long-form video into clips' },
-  { id: 23, name: 'Contract Analyzer', category: 'Finance', status: 'In Progress', priority: 'High', revenue: 35000, deps: ['LLM API', 'Doc Generator'], description: 'AI contract review and risk assessment' },
-  { id: 24, name: 'Customer Health Score', category: 'Analytics', status: 'In Progress', priority: 'High', revenue: 42000, deps: ['CRM Integration', 'ML Pipeline'], description: 'Predictive customer health monitoring' },
-  { id: 25, name: 'Talent Acquisition Bot', category: 'HR', status: 'In Progress', priority: 'Medium', revenue: 22000, deps: ['LLM API', 'HR System'], description: 'AI-powered candidate screening and outreach' },
-  { id: 26, name: 'Pricing Optimizer', category: 'Sales', status: 'In Progress', priority: 'High', revenue: 50000, deps: ['Pricing Engine', 'ML Pipeline'], description: 'Dynamic pricing optimization using ML' },
-  { id: 27, name: 'Compliance Monitor', category: 'Operations', status: 'In Progress', priority: 'Medium', revenue: 25000, deps: ['Doc Generator', 'LLM API'], description: 'Automated regulatory compliance tracking' },
-  { id: 28, name: 'Data Lake Connector', category: 'Analytics', status: 'Planned', priority: 'High', revenue: 30000, deps: ['Data Warehouse', 'Integration Hub'], description: 'Universal data source integration layer' },
-  { id: 29, name: 'AI Training Platform', category: 'AI/ML', status: 'Planned', priority: 'Medium', revenue: 45000, deps: ['LLM API', 'ML Pipeline'], description: 'Custom model fine-tuning platform' },
-  { id: 30, name: 'Revenue Forecaster', category: 'Finance', status: 'Planned', priority: 'High', revenue: 38000, deps: ['ML Pipeline', 'Data Warehouse'], description: 'AI-powered revenue forecasting tool' },
-  { id: 31, name: 'Partner Portal', category: 'Sales', status: 'Planned', priority: 'Medium', revenue: 28000, deps: ['CRM Integration', 'Payment Gateway'], description: 'White-label partner management portal' },
-  { id: 32, name: 'Knowledge Base Builder', category: 'Operations', status: 'Planned', priority: 'Medium', revenue: 20000, deps: ['LLM API', 'Doc Generator'], description: 'AI-powered knowledge base creation' },
-  { id: 33, name: 'Sentiment Dashboard', category: 'Marketing', status: 'Planned', priority: 'Low', revenue: 15000, deps: ['Social API', 'ML Pipeline'], description: 'Real-time customer sentiment analysis' },
-];
-
-const depNodes = [
-  'CRM Integration', 'Email Engine', 'Payment Gateway', 'Social API', 'Data Warehouse',
-  'Doc Generator', 'Pricing Engine', 'Calendar API', 'ML Pipeline', 'LLM API',
-  'OCR Engine', 'Web Scraper', 'HR System', 'Integration Hub', 'Media API', 'Scoring Engine',
+  {
+    id: 1,
+    name: 'Content Matrix',
+    category: 'Marketing',
+    status: 'Live',
+    priority: 'High',
+    url: 'https://content-matrix-orcin.vercel.app',
+    revenue: 42000,
+    description: 'Multi-platform content strategy matrix for mapping content pillars, formats, and distribution channels across the Empire.',
+    tech: 'Next.js / Vercel',
+  },
+  {
+    id: 2,
+    name: 'Hook Engine',
+    category: 'Marketing',
+    status: 'Live',
+    priority: 'High',
+    url: 'https://hook-engine.vercel.app',
+    revenue: 38000,
+    description: 'AI-powered hook generator that creates scroll-stopping openers for social posts, emails, ads, and video scripts.',
+    tech: 'Next.js / Vercel',
+  },
+  {
+    id: 3,
+    name: 'AI Readiness Assessment',
+    category: 'AI/ML',
+    status: 'Live',
+    priority: 'High',
+    url: 'https://ai-readiness-assessment.vercel.app',
+    revenue: 55000,
+    description: 'Evaluates organizational AI readiness across 15 questions in 4 dimensions, delivering tier classification and actionable recommendations.',
+    tech: 'Next.js / Vercel',
+  },
+  {
+    id: 4,
+    name: 'Revenue Leak Calculator',
+    category: 'Sales',
+    status: 'Live',
+    priority: 'Critical',
+    url: 'https://revenue-leak-calculator.vercel.app',
+    revenue: 68000,
+    description: 'W.A.I.T. formula calculator that quantifies revenue leakage across Wasted Time, Automation Gaps, Inefficient Processes, and Turnover/Churn.',
+    tech: 'Next.js / Vercel',
+  },
+  {
+    id: 5,
+    name: 'Competitor Warfare',
+    category: 'Analytics',
+    status: 'Live',
+    priority: 'High',
+    url: 'https://competitor-warfare.vercel.app',
+    revenue: 35000,
+    description: 'Competitive intelligence dashboard for mapping competitor positioning, pricing, messaging, and market gaps in real time.',
+    tech: 'Next.js / Vercel',
+  },
+  {
+    id: 6,
+    name: 'Growth Engine (PAID)',
+    category: 'Sales',
+    status: 'Live',
+    priority: 'Critical',
+    url: 'https://growth-engine-paid.vercel.app',
+    revenue: 120000,
+    description: 'Paid acquisition and growth strategy engine with funnel modeling, CAC/LTV analysis, and channel optimization for scaling revenue.',
+    tech: 'Next.js / Vercel',
+  },
+  {
+    id: 7,
+    name: 'RISE Intelligence',
+    category: 'AI/ML',
+    status: 'Live',
+    priority: 'High',
+    url: 'https://rise-intelligence.vercel.app',
+    revenue: 75000,
+    description: 'Revenue Intelligence System Engine that surfaces deal insights, pipeline health signals, and AI-driven next-best-action recommendations.',
+    tech: 'Next.js / Vercel',
+  },
+  {
+    id: 8,
+    name: 'Tradesbot',
+    category: 'AI/ML',
+    status: 'Live',
+    priority: 'High',
+    url: 'https://tradesbot.vercel.app',
+    revenue: 90000,
+    description: 'Automated trading intelligence bot with market signal detection, pattern recognition, and portfolio optimization workflows.',
+    tech: 'Next.js / Vercel',
+  },
+  {
+    id: 9,
+    name: 'AWE V2.0',
+    category: 'Operations',
+    status: 'Deploying',
+    priority: 'Critical',
+    url: null,
+    revenue: 150000,
+    description: 'Autonomous Workforce Engine V2.0 - backend deploying to Railway. Orchestrates AI agents across sales, ops, and content workflows with zero human intervention.',
+    tech: 'Railway (Backend)',
+  },
+  {
+    id: 10,
+    name: 'Empire Dashboard',
+    category: 'Platform',
+    status: 'Live',
+    priority: 'High',
+    url: 'https://empire-dashboard-iota.vercel.app',
+    revenue: 0,
+    description: 'Central command center for the Empire ecosystem. Real-time KPIs, revenue trajectory, QUORUM launch tracker, brand mix, deal pipeline, and all 11 engines.',
+    tech: 'Next.js / Vercel',
+  },
+  {
+    id: 11,
+    name: 'FundingHub.co',
+    category: 'Platform',
+    status: 'Live',
+    priority: 'High',
+    url: 'https://fundinghub.co',
+    revenue: 95000,
+    description: 'Capital access platform connecting founders and operators with funding sources, grant databases, and investor networks.',
+    tech: 'Custom Domain',
+  },
+  {
+    id: 12,
+    name: 'SUITE AI Advisory Board',
+    category: 'AI/ML',
+    status: 'Live',
+    priority: 'High',
+    url: 'https://suite-tan-nine.vercel.app/landing',
+    revenue: 85000,
+    description: 'AI-powered advisory board simulation that provides strategic counsel, board-level insights, and scenario planning across business functions.',
+    tech: 'Next.js / Vercel',
+  },
 ];
 
 export default function FactoryToolBuilder() {
@@ -57,22 +151,35 @@ export default function FactoryToolBuilder() {
   const [activeStatus, setActiveStatus] = useState('All');
 
   const filtered = tools.filter((tool) => {
-    const matchSearch = tool.name.toLowerCase().includes(search.toLowerCase()) ||
+    const matchSearch =
+      tool.name.toLowerCase().includes(search.toLowerCase()) ||
       tool.description.toLowerCase().includes(search.toLowerCase());
     const matchCategory = activeCategory === 'All' || tool.category === activeCategory;
     const matchStatus = activeStatus === 'All' || tool.status === activeStatus;
     return matchSearch && matchCategory && matchStatus;
   });
 
-  const deployed = tools.filter((t) => t.status === 'Deployed').length;
-  const inProgress = tools.filter((t) => t.status === 'In Progress').length;
+  const live = tools.filter((t) => t.status === 'Live').length;
+  const deploying = tools.filter((t) => t.status === 'Deploying').length;
   const planned = tools.filter((t) => t.status === 'Planned').length;
   const totalRevenue = tools.reduce((sum, t) => sum + t.revenue, 0);
 
-  const statusBadge = {
-    Deployed: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
-    'In Progress': 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-    Planned: 'bg-slate-600/20 text-slate-400 border-slate-600/30',
+  const statusConfig = {
+    Live: {
+      badge: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+      dot: 'bg-emerald-400',
+      icon: CheckCircle2,
+    },
+    Deploying: {
+      badge: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+      dot: 'bg-amber-400',
+      icon: Radio,
+    },
+    Planned: {
+      badge: 'bg-slate-600/20 text-slate-400 border-slate-600/30',
+      dot: 'bg-slate-500',
+      icon: Clock,
+    },
   };
 
   const priorityBadge = {
@@ -88,28 +195,47 @@ export default function FactoryToolBuilder() {
     Operations: '#10b981',
     Analytics: '#3b82f6',
     'AI/ML': '#6366f1',
-    Finance: '#22d3ee',
-    HR: '#a78bfa',
+    Platform: '#22d3ee',
+  };
+
+  const categoryIcons = {
+    Sales: DollarSign,
+    Marketing: Zap,
+    Operations: Layers,
+    Analytics: TrendingUp,
+    'AI/ML': Box,
+    Platform: Globe,
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-4 md:p-6 space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-          <Wrench className="w-8 h-8 text-amber-400" />
-          Factory Tool Builder
-        </h1>
-        <p className="text-slate-400 mt-1">33 tools powering the Empire ecosystem</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+            <Wrench className="w-8 h-8 text-amber-400" />
+            Factory Tool Builder
+          </h1>
+          <p className="text-slate-400 mt-1">12 live tools powering the Empire ecosystem</p>
+        </div>
+        <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-3 py-2">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="text-xs text-emerald-400 font-medium">{live} Tools Live</span>
+        </div>
       </div>
 
       {/* Summary Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Total Tools', value: '33', icon: Box, color: 'amber' },
-          { label: 'Deployed', value: String(deployed), icon: CheckCircle2, color: 'emerald' },
-          { label: 'In Progress', value: String(inProgress), icon: Clock, color: 'amber' },
-          { label: 'Total Revenue Impact', value: `$${(totalRevenue / 1000).toFixed(0)}K`, icon: DollarSign, color: 'indigo' },
+          { label: 'Total Tools', value: String(tools.length), icon: Box, color: 'amber' },
+          { label: 'Live', value: String(live), icon: CheckCircle2, color: 'emerald' },
+          { label: 'Deploying', value: String(deploying), icon: Radio, color: 'amber' },
+          {
+            label: 'Revenue Impact',
+            value: `$${(totalRevenue / 1000).toFixed(0)}K`,
+            icon: DollarSign,
+            color: 'indigo',
+          },
         ].map((stat) => {
           const Icon = stat.icon;
           const colorMap = {
@@ -118,7 +244,10 @@ export default function FactoryToolBuilder() {
             indigo: 'text-indigo-400 border-indigo-500/20',
           };
           return (
-            <div key={stat.label} className={`bg-slate-800/50 border rounded-xl p-4 backdrop-blur-sm ${colorMap[stat.color]}`}>
+            <div
+              key={stat.label}
+              className={`bg-slate-800/50 border rounded-xl p-4 backdrop-blur-sm ${colorMap[stat.color]}`}
+            >
               <Icon className="w-5 h-5 mb-2" />
               <div className="text-2xl font-bold text-white">{stat.value}</div>
               <div className="text-sm text-slate-400">{stat.label}</div>
@@ -181,43 +310,89 @@ export default function FactoryToolBuilder() {
 
       {/* Tools Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filtered.map((tool) => (
-          <div key={tool.id} className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-5 backdrop-blur-sm hover:border-amber-500/30 transition-all group">
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: (categoryColors[tool.category] || '#6366f1') + '20' }}>
-                  <Wrench className="w-4 h-4" style={{ color: categoryColors[tool.category] || '#6366f1' }} />
+        {filtered.map((tool) => {
+          const CatIcon = categoryIcons[tool.category] || Wrench;
+          const cfg = statusConfig[tool.status] || statusConfig.Planned;
+          const StatusIcon = cfg.icon;
+          return (
+            <div
+              key={tool.id}
+              className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-5 backdrop-blur-sm hover:border-amber-500/30 transition-all group flex flex-col"
+            >
+              {/* Card Header */}
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: (categoryColors[tool.category] || '#6366f1') + '20' }}
+                  >
+                    <CatIcon
+                      className="w-4 h-4"
+                      style={{ color: categoryColors[tool.category] || '#6366f1' }}
+                    />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-white group-hover:text-amber-400 transition-colors leading-tight">
+                      {tool.name}
+                    </h3>
+                    <span className="text-xs text-slate-500">#{tool.id} &middot; {tool.tech}</span>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-sm font-semibold text-white group-hover:text-amber-400 transition-colors">{tool.name}</h3>
-                  <span className="text-xs text-slate-500">#{tool.id}</span>
-                </div>
+                <span className={`px-2 py-0.5 rounded text-xs font-medium flex-shrink-0 ${priorityBadge[tool.priority]}`}>
+                  {tool.priority}
+                </span>
               </div>
-              <span className={`px-2 py-0.5 rounded text-xs font-medium ${priorityBadge[tool.priority]}`}>
-                {tool.priority}
-              </span>
-            </div>
-            <p className="text-xs text-slate-400 mb-3 line-clamp-2">{tool.description}</p>
-            <div className="flex flex-wrap gap-1.5 mb-3">
-              <span className="px-2 py-0.5 rounded text-xs font-medium" style={{ backgroundColor: (categoryColors[tool.category] || '#6366f1') + '20', color: categoryColors[tool.category] || '#6366f1' }}>
-                {tool.category}
-              </span>
-              <span className={`px-2 py-0.5 rounded text-xs font-medium border ${statusBadge[tool.status]}`}>
-                {tool.status}
-              </span>
-            </div>
-            <div className="flex items-center justify-between pt-3 border-t border-slate-700/30">
-              <div className="flex items-center gap-1 text-xs text-slate-500">
-                <GitBranch className="w-3 h-3" />
-                {tool.deps.length} deps
+
+              {/* Description */}
+              <p className="text-xs text-slate-400 mb-3 line-clamp-2 flex-1">{tool.description}</p>
+
+              {/* Badges */}
+              <div className="flex flex-wrap gap-1.5 mb-3">
+                <span
+                  className="px-2 py-0.5 rounded text-xs font-medium"
+                  style={{
+                    backgroundColor: (categoryColors[tool.category] || '#6366f1') + '20',
+                    color: categoryColors[tool.category] || '#6366f1',
+                  }}
+                >
+                  {tool.category}
+                </span>
+                <span className={`px-2 py-0.5 rounded text-xs font-medium border flex items-center gap-1 ${cfg.badge}`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot} ${tool.status === 'Live' ? 'animate-pulse' : ''}`} />
+                  {tool.status}
+                </span>
               </div>
-              <div className="flex items-center gap-1 text-sm font-bold text-amber-400">
-                <DollarSign className="w-3 h-3" />
-                {(tool.revenue / 1000).toFixed(0)}K/yr
+
+              {/* Footer */}
+              <div className="flex items-center justify-between pt-3 border-t border-slate-700/30">
+                {tool.url ? (
+                  <a
+                    href={tool.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 text-xs text-indigo-400 hover:text-indigo-300 transition-colors font-medium truncate max-w-[60%]"
+                  >
+                    <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                    <span className="truncate">{tool.url.replace('https://', '')}</span>
+                  </a>
+                ) : (
+                  <div className="flex items-center gap-1 text-xs text-amber-400">
+                    <Radio className="w-3 h-3" />
+                    <span>Deploying to Railway</span>
+                  </div>
+                )}
+                {tool.revenue > 0 ? (
+                  <div className="flex items-center gap-1 text-sm font-bold text-amber-400 flex-shrink-0">
+                    <DollarSign className="w-3 h-3" />
+                    {(tool.revenue / 1000).toFixed(0)}K/yr
+                  </div>
+                ) : (
+                  <div className="text-xs text-slate-500 flex-shrink-0">Internal</div>
+                )}
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {filtered.length === 0 && (
@@ -227,23 +402,33 @@ export default function FactoryToolBuilder() {
         </div>
       )}
 
-      {/* Dependency Chain Visualization */}
+      {/* Live Tools Directory */}
       <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 backdrop-blur-sm">
         <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-          <GitBranch className="w-5 h-5 text-amber-400" />
-          Dependency Map
+          <Globe className="w-5 h-5 text-emerald-400" />
+          Live Tools Directory
         </h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
-          {depNodes.map((dep) => {
-            const dependentCount = tools.filter((t) => t.deps.includes(dep)).length;
-            return (
-              <div key={dep} className="bg-slate-900/50 border border-slate-700/30 rounded-lg p-3 text-center hover:border-indigo-500/30 transition-colors">
-                <div className="text-xs font-medium text-white mb-1">{dep}</div>
-                <div className="text-lg font-bold text-indigo-400">{dependentCount}</div>
-                <div className="text-[10px] text-slate-500">tools depend</div>
-              </div>
-            );
-          })}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {tools
+            .filter((t) => t.status === 'Live' && t.url)
+            .map((tool) => (
+              <a
+                key={tool.id}
+                href={tool.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 bg-slate-900/50 border border-slate-700/30 rounded-lg p-3 hover:border-emerald-500/30 hover:bg-slate-900/80 transition-all group"
+              >
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
+                <div className="min-w-0">
+                  <div className="text-sm font-medium text-white group-hover:text-emerald-400 transition-colors truncate">
+                    {tool.name}
+                  </div>
+                  <div className="text-xs text-slate-500 truncate">{tool.url.replace('https://', '')}</div>
+                </div>
+                <ExternalLink className="w-3 h-3 text-slate-600 group-hover:text-emerald-400 transition-colors flex-shrink-0 ml-auto" />
+              </a>
+            ))}
         </div>
       </div>
 
@@ -273,7 +458,9 @@ export default function FactoryToolBuilder() {
                     }}
                   />
                 </div>
-                <span className="text-sm font-bold text-white w-16 text-right">${(rev / 1000).toFixed(0)}K</span>
+                <span className="text-sm font-bold text-white w-16 text-right">
+                  ${(rev / 1000).toFixed(0)}K
+                </span>
               </div>
             ))}
         </div>
